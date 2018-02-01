@@ -23,4 +23,5 @@ deploy:
   - "${RELEASE_DEB_FILE}"
   - "${RELEASE_RPM_FILE}"
   on:
-    repo: cvtienhoven/graylog-plugin-topdesk
+    tags: true
+    jdk: oraclejdk8
