@@ -22,9 +22,9 @@
     </developers>
 
     <scm>
-        <connection>scm:git:https://github.com/cvtienhoven/graylog-plugin-nexmo.git</connection>
-        <developerConnection>scm:git:https://github.com/cvtienhoven/graylog-plugin-nexmo.git</developerConnection>
-        <url>https://github.com/cvtienhoven/graylog-plugin-nexmo.git</url>
+        <connection>scm:git:https://github.com/cvtienhoven/graylog-plugin-topdesk.git</connection>
+        <developerConnection>scm:git:https://github.com/cvtienhoven/graylog-plugin-topdesk.git</developerConnection>
+        <url>https://github.com/cvtienhoven/graylog-plugin-topdesk.git</url>
         <tag>HEAD</tag>
     </scm>
 
@@ -77,28 +77,7 @@
               </excludes>
             </resource>
         </resources>
-        
-        <plugins>
-        	<plugin>
-			    <groupId>org.apache.maven.plugins</groupId>
-			    <artifactId>maven-install-plugin</artifactId>
-			    <version>2.4</version>
-			    <executions>
-			        <execution>
-			            <phase>initialize</phase>
-			            <goals>
-			                <goal>install-file</goal>
-			            </goals>
-			            <configuration>
-			                <groupId>com.nexmo</groupId>
-			                <artifactId>nexmo-sdk</artifactId>
-			                <version>1.4</version>
-			                <packaging>jar</packaging>
-			                <file>${basedir}/lib/nexmo-sdk.jar</file>
-			            </configuration>
-			        </execution>
-			    </executions>
-			</plugin>
+        <plugins> 
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-shade-plugin</artifactId>
