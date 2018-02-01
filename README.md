@@ -33,6 +33,8 @@ possible to define a template and replace the placeholders with a field value fo
 also use some basic HTML tags as described in the  [Topdesk API](https://developers.topdesk.com/documentation/index.html#api-Incident-CreateIncident) 
 for the `request` field.
 
+**Note**: Currently an HTTPS connection is established over without verifying certificates. Connection options might be extended in the future.
+
 
 Getting started
 ---------------

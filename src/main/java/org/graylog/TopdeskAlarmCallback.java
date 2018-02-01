@@ -217,7 +217,6 @@ public class TopdeskAlarmCallback implements AlarmCallback {
 		Response response = client.newCall(request).execute();
 		String responseString = response.body().string();
 		LOG.info(responseString);
-		System.out.println(responseString);
 	}
 
 	String getId(OkHttpClient client, String token, String URI, String name, String keyName) throws IOException, ParseException {
@@ -232,7 +231,6 @@ public class TopdeskAlarmCallback implements AlarmCallback {
 		Response response = client.newCall(request).execute();
 		JSONParser parser = new JSONParser();
 		String jsonString = response.body().string();
-		System.out.println(jsonString);
 
 		Object object = parser.parse(jsonString);
 
