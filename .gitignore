@@ -1,0 +1,15 @@
+.idea/
+*.iml
+*.ipr
+*.iws
+.classpath
+.project
+.settings/
+cache/
+target/
+dependency-reduced-pom.xml
+pom.xml.versionsBackup
+build
+build.config.js.sample
+
+/.apt_generated/
