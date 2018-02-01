@@ -1,6 +1,6 @@
 # Topdesk Plugin for Graylog
 
-[![Build Status](https://travis-ci.org/cvtienhoven/graylog-plugin-nexmo.svg?branch=master)](https://travis-ci.org/cvtienhoven/graylog-plugin-nexmo)
+[![Build Status](https://travis-ci.org/cvtienhoven/graylog-plugin-topdesk.svg?branch=master)](https://travis-ci.org/cvtienhoven/graylog-plugin-topdesk)
 
 
 **Required Graylog version:** 2.4 and later
