@@ -22,6 +22,7 @@ deploy:
   - "${RELEASE_PKG_FILE}"
   - "${RELEASE_DEB_FILE}"
   - "${RELEASE_RPM_FILE}"
+  skip_cleanup: true
   on:
     tags: true
     jdk: oraclejdk8
