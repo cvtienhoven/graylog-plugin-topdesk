@@ -2,12 +2,16 @@ package org.graylog;
 
 
 import java.io.IOException;
-import java.util.Iterator;
-import java.util.Map;
+import java.text.SimpleDateFormat;
+import java.util.*;
 
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Lists;
 import okhttp3.*;
+import org.graylog2.plugin.Message;
 import org.graylog2.plugin.MessageSummary;
+import org.graylog2.plugin.Tools;
+import org.graylog2.plugin.alarms.AlertCondition;
 import org.graylog2.plugin.alarms.AlertCondition.CheckResult;
 import org.graylog2.plugin.alarms.callbacks.AlarmCallback;
 
@@ -21,6 +25,7 @@ import org.graylog2.plugin.configuration.fields.DropdownField;
 import org.graylog2.plugin.configuration.fields.TextField;
 import org.graylog2.plugin.configuration.fields.NumberField;
 import org.graylog2.plugin.streams.Stream;
+import org.joda.time.DateTime;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
@@ -34,6 +39,7 @@ import com.google.common.collect.Maps;
 import org.apache.commons.codec.binary.Base64;
 
 import javax.net.ssl.*;
+import javax.xml.ws.http.HTTPException;
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
 
@@ -45,6 +51,8 @@ public class TopdeskAlarmCallback implements AlarmCallback {
 	private static final String IMPACTS_URI = "/tas/api/incidents/impacts";
 	private static final String URGENCIES_URI = "/tas/api/incidents/urgencies";
 	private static final String OPERATOR_GROUPS_URI = "/tas/api/operatorgroups";
+	private static final String CATEGORIES_URI = "/tas/api/incidents/categories";
+	private static final String SUBCATEGORIES_URI = "tas/api/incidents/subcategories";
 
 	public static final MediaType JSON
 			= MediaType.parse("application/json; charset=utf-8");
@@ -61,6 +69,8 @@ public class TopdeskAlarmCallback implements AlarmCallback {
 	private static final String IMPACT = "impact";
 	private static final String URGENCY = "urgency";
 	private static final String OPERATOR_GROUP = "operator_group";
+	private static final String CATEGORY = "category";
+	private static final String SUBCATEGORY = "subcategory";
 
 	private static final String SUMMARY = "summary";
 	private static final String DESCRIPTION = "description";
@@ -75,12 +85,19 @@ public class TopdeskAlarmCallback implements AlarmCallback {
 		String description = configuration.getString(DESCRIPTION);
 
 		description = description.replace("%stream%", stream.getTitle());
-		description = description.replace("%triggeredAt%", result.getTriggeredAt().toString());
+
+		SimpleDateFormat sdf =  new SimpleDateFormat("yyyy-MM-dd HH:mm:ssZ");
+		TimeZone tz = TimeZone.getDefault();
+		sdf.setTimeZone(tz);
+		String dateTime = sdf.format(new Date());
+
+		description = description.replace("%triggeredAt%", dateTime);
 
 
 		if (result.getMatchingMessages().size() > 0) {
-			MessageSummary message = result.getMatchingMessages().get(0);
-			description.replace("%message%", message.getMessage());
+			List<Message> messages = getAlarmBacklog(result);
+			Message message = messages.get(0);
+			description.replace("%message%", messages.get(0).getMessage());
 
 			if (message != null) {
 				Map<String, Object> fields = message.getFields();
@@ -97,9 +114,30 @@ public class TopdeskAlarmCallback implements AlarmCallback {
 			OkHttpClient client = getUnsafeOkHttpClient();
 			postIncident(client, description);
 		} catch (ParseException|IOException e) {
-			e.printStackTrace();
+			throw new AlarmCallbackException(e.toString());
 		}
 
+	}
+
+	protected List<Message> getAlarmBacklog(AlertCondition.CheckResult result) {
+		final AlertCondition alertCondition = result.getTriggeredCondition();
+		final List<MessageSummary> matchingMessages = result.getMatchingMessages();
+
+		final int effectiveBacklogSize = Math.min(alertCondition.getBacklog(), matchingMessages.size());
+
+		if (effectiveBacklogSize == 0) {
+			return Collections.emptyList();
+		}
+
+		final List<MessageSummary> backlogSummaries = matchingMessages.subList(0, effectiveBacklogSize);
+
+		final List<Message> backlog = Lists.newArrayListWithCapacity(effectiveBacklogSize);
+
+		for (MessageSummary messageSummary : backlogSummaries) {
+			backlog.add(messageSummary.getRawMessage());
+		}
+
+		return backlog;
 	}
 
 	public void postIncident(OkHttpClient client, String description) throws IOException, ParseException {
@@ -120,12 +158,13 @@ public class TopdeskAlarmCallback implements AlarmCallback {
 				.addHeader("Authorization", "Basic " + encodedAuth)
 				.get()
 				.build();
+		LOG.info("request: " + request.header("Authorization"));
 		Response response = client.newCall(request).execute();
 		return response.body().string();
 	}
 
 
-	void post(OkHttpClient client, String token, String description) throws IOException, ParseException {
+	void post(OkHttpClient client, String token, String description) throws HTTPException, ParseException, IOException {
 		JSONObject jsonRequest= new JSONObject();
 
 		JSONObject callerLookup = new JSONObject();
@@ -200,6 +239,16 @@ public class TopdeskAlarmCallback implements AlarmCallback {
 			operatorGroup.put("id", operatorGroupId);
 			jsonRequest.put("operatorGroup", operatorGroup);
 		}
+		if (configuration.stringIsSet(CATEGORY)) {
+			JSONObject category = new JSONObject();
+			category.put("name", configuration.getString(CATEGORY));
+			jsonRequest.put("category", category);
+		}
+		if (configuration.stringIsSet(SUBCATEGORY)) {
+			JSONObject subcategory = new JSONObject();
+			subcategory.put("name", configuration.getString(SUBCATEGORY));
+			jsonRequest.put("subcategory", subcategory);
+		}
 
 		JSONObject object = new JSONObject();
 		object.put("name", configuration.getString(OBJECT));
@@ -216,7 +265,13 @@ public class TopdeskAlarmCallback implements AlarmCallback {
 
 		Response response = client.newCall(request).execute();
 		String responseString = response.body().string();
+		if (response.code() != 201) {
+			LOG.error("Error during POST: " + responseString);
+			throw new HTTPException(response.code());
+		}
+
 		LOG.info(responseString);
+
 	}
 
 	String getId(OkHttpClient client, String token, String URI, String name, String keyName) throws IOException, ParseException {
@@ -331,6 +386,18 @@ public class TopdeskAlarmCallback implements AlarmCallback {
 					throw new ConfigurationException( configuration.getString(OPERATOR_GROUP) + " is not a valid " + OPERATOR_GROUP);
 				}
 			}
+			if (configuration.stringIsSet(CATEGORY)) {
+				String categoryId = getId(client, token, CATEGORIES_URI, configuration.getString(CATEGORY), "name");
+				if (categoryId == null) {
+					throw new ConfigurationException( configuration.getString(CATEGORY) + " is not a valid " + CATEGORY);
+				}
+			}
+			if (configuration.stringIsSet(SUBCATEGORY)) {
+				String subcategoryId = getId(client, token, SUBCATEGORIES_URI, configuration.getString(SUBCATEGORY), "name");
+				if (subcategoryId == null) {
+					throw new ConfigurationException( configuration.getString(SUBCATEGORY) + " is not a valid " + SUBCATEGORY);
+				}
+			}
 		} catch (ParseException|IOException e) {
 			throw new ConfigurationException( "Failed to verify configuration: " + e.getMessage());
 		}
@@ -403,7 +470,15 @@ public class TopdeskAlarmCallback implements AlarmCallback {
 		configurationRequest.addField(new TextField(OPERATOR_GROUP, "Operator group", "",
 				"", ConfigurationField.Optional.OPTIONAL));
 
-		configurationRequest.addField(new TextField(DESCRIPTION, "Desription", "",
+		configurationRequest.addField(new TextField(CATEGORY, "Category", "",
+				"", ConfigurationField.Optional.NOT_OPTIONAL));
+
+		configurationRequest.addField(new TextField(SUBCATEGORY, "Subcategory", "",
+				"", ConfigurationField.Optional.OPTIONAL));
+
+
+
+		configurationRequest.addField(new TextField(DESCRIPTION, "Description", "",
 				"Full description for the incident. Use %fieldname% placeholders to replace with fields from the first message. Use %stream% for stream name and %triggeredAt% for triggered timestamp.", ConfigurationField.Optional.OPTIONAL));
 
 		return configurationRequest;
