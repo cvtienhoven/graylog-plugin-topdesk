@@ -23,7 +23,7 @@ import org.graylog2.plugin.configuration.ConfigurationRequest;
 import org.graylog2.plugin.configuration.fields.ConfigurationField;
 import org.graylog2.plugin.configuration.fields.DropdownField;
 import org.graylog2.plugin.configuration.fields.TextField;
-import org.graylog2.plugin.configuration.fields.NumberField;
+import org.graylog2.plugin.configuration.fields.BooleanField;
 import org.graylog2.plugin.streams.Stream;
 import org.joda.time.DateTime;
 import org.json.simple.JSONArray;
@@ -71,6 +71,7 @@ public class TopdeskAlarmCallback implements AlarmCallback {
 	private static final String OPERATOR_GROUP = "operator_group";
 	private static final String CATEGORY = "category";
 	private static final String SUBCATEGORY = "subcategory";
+	private static final String SECOND_LINE = "second_line";
 
 	private static final String SUMMARY = "summary";
 	private static final String DESCRIPTION = "description";
@@ -248,6 +249,10 @@ public class TopdeskAlarmCallback implements AlarmCallback {
 			JSONObject subcategory = new JSONObject();
 			subcategory.put("name", configuration.getString(SUBCATEGORY));
 			jsonRequest.put("subcategory", subcategory);
+		}
+
+		if (configuration.getBoolean(SECOND_LINE)) {
+			jsonRequest.put("status", "secondLine");
 		}
 
 		JSONObject object = new JSONObject();
@@ -476,10 +481,11 @@ public class TopdeskAlarmCallback implements AlarmCallback {
 		configurationRequest.addField(new TextField(SUBCATEGORY, "Subcategory", "",
 				"", ConfigurationField.Optional.OPTIONAL));
 
-
-
 		configurationRequest.addField(new TextField(DESCRIPTION, "Description", "",
 				"Full description for the incident. Use %fieldname% placeholders to replace with fields from the first message. Use %stream% for stream name and %triggeredAt% for triggered timestamp.", ConfigurationField.Optional.OPTIONAL));
+
+		configurationRequest.addField(new BooleanField(SECOND_LINE, "Second Line", false,
+				""));
 
 		return configurationRequest;
 	}
