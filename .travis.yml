@@ -17,12 +17,13 @@ before_deploy:
 deploy:
   provider: releases
   api_key:
-    secure: OXfEFTK62823buYppIqmyFJLhMfACw9eMetI+XAHfgVZj597rn4KiGIT7d0Qc/x/GhStfPaZnwxmkbxVPoOOSsJnutW7WD/n23FDYadE01ae33SPA37EjiD5ZuDRkK3sZ2wZG0CDDRAABpr0cVP2bEV3v9R0D3ec9W8kUMaPpM0Es2x3NUaGq4Py78J1MNpUO1dzOYz0/2px20/ewmBc1+BSHCr6H0pVS387I/JPvQkyhPmCwU9z4IeefPPzDEt2yYzscLnysSvlbaaOvTtoe3yZAtGFJka/z79b1qitYpiHRQpZt2PPyOJ3VD4+Zry8wa36LDuO/7jC4po4GP4cAGRwz0dGuN8reaeHlEABWqV1BUl46dsTd7gpi1VBOHTEkkaLcJaUwvOi+PsLpsG0S8vJFejfI+gTIv26XRnawSqYKpgHWa6XN88crs8hvIsFwX32gGfGsFOy4o9OowpOxfYIELoRUxHvf5lGiIvle8i35+9aKPo7xWyNxRedzQNJZFHkxpw/xxX8SMyDONfxocg2IzH/rqzJvx4acDO0V5aIT9c2OgmvVgDlC0dWdTYQn/xLC24gbWFQkI98ZnAvv4O5TLGx7LWDkiH5vhF5kzqpbePPDHNSIEHkO542SVlRa99i/08bgMI09pOrs37HgShwXZMJ0XIZIafUHhod+bI=
+    secure: BRWRiAXDDuX/KH6PMFf+ADVR7ACPKHSXALvV8ZXZytpX5aQ78yl+5D12GrXR+FRyYlmQhRckhFyRAT2lWYQOXEt+yCZpgEvl0DxV0X1mk5wyaVQIcoS5A96MMPmD7d3IWarorJy7DQ3ZD0Wkhdrwb1aoh7AIPUADaA+thuFtLTNFkBkr/DuRQTO/FFkq38E3s13dMJeQTTyp0fWBmVIAlpcwo/EgrkCtdxtBZ8jphVmc7tJY92tKMqhBrp0kRAOe4ZGTqk8xt+UWhBjzh8FQK6ZGFBUhVCIozYZIYATbakcMNjh2m0rpdwfbgVuKMh8ze55dt5iqejp8uZqYVlABecuCS3k/tnZEBwrxNYnXsB1XXs1BG1wD3MoWgB/yEKgm5/zxAp825x9uGKKPCrPbw/CXR/2PpQuQjmX5gyERnTcWohXbMDVH/NjVOw+qCvB2qEcn8he69noYO/9ZQBt6lMd9RHfDrFwOA/7Qtd2UFkCJ8DvH9+VkD6Ik6g6t+w4ucf40nBFDc4a4qZvyb1ZdASVG7g7aMhaml1NG7DZ1ckCd6CrXpZ8//M1yJqUjoKVDmDXQmWU7IuOA6ElIhKbUw2TGSTkuDJurVw17CSR+V30UTuWdIVVZfflYNCMqoDiPbcDeuE9RiI/fPXi954DHOVZMRSVi+fl6+BG/zPjRyRk=
   file:
   - "${RELEASE_PKG_FILE}"
   - "${RELEASE_DEB_FILE}"
   - "${RELEASE_RPM_FILE}"
-  skip_cleanup: true
   on:
+    repo: cvtienhoven/graylog-plugin-topdesk
     tags: true
     jdk: openjdk8
+  skip_cleanup: 'true'
