@@ -46,10 +46,30 @@ public class TopdeskAlarmCallbackTest {
 			.put("impact", "impact")
 			.put("urgency", "urgency")
 			.put("operator_group", "operators")
+			.put("optional_fields", "test1,test2")
 			.put("description", "Alert raised on stream <b>%stream%</b> at the following time: <b>%triggeredAt%</b>.<br/><br/> Source ip: %src_ip%.")
 			.build();
 
-	
+
+	private static final ImmutableMap<String, Object> INVALID_CONFIG = ImmutableMap.<String, Object> builder()
+			.put("endpoint", "https://localhost")
+			.put("username", "user")
+			.put("password", "pass")
+			.put("login_mode", "operator")
+			.put("caller_email", "foo@bar.com")
+			.put("summary", "summary")
+			.put("priority", "priority")
+			.put("entry_type", "entry type")
+			.put("call_type", "call type")
+			.put("object", "object")
+			.put("impact", "impact")
+			.put("urgency", "urgency")
+			.put("operator_group", "operators")
+			.put("optional_fields", "test1,test2,test1,test2,test1,test2,test1,test2,test1,test2,test3")
+			.put("description", "Alert raised on stream <b>%stream%</b> at the following time: <b>%triggeredAt%</b>.<br/><br/> Source ip: %src_ip%.")
+			.build();
+
+
 	private static final Configuration VALID_CONFIGURATION = new Configuration(VALID_CONFIG);
 
 	private TopdeskAlarmCallback alarmCallback;
@@ -65,12 +85,29 @@ public class TopdeskAlarmCallbackTest {
 		alarmCallback.initialize(configuration);
 	}
 
+	@Test
+	public void testInitializeInvalid() throws AlarmCallbackConfigurationException {
+		final Configuration configuration = new Configuration(INVALID_CONFIG);
+		alarmCallback.initialize(configuration);
+		try {
+			alarmCallback.checkConfiguration();
+			fail();
+		} catch (ConfigurationException e) {
+			System.out.println(e.getMessage());
+		}
+	}
+
 
 	@Test
 	public void testConfigurationSucceedsWithValidConfiguration()
 			throws AlarmCallbackConfigurationException, ConfigurationException {
 		alarmCallback.initialize(new Configuration(VALID_CONFIG));
-		//alarmCallback.checkConfiguration();
+//		try {
+//			alarmCallback.checkConfiguration();
+//		} catch (ConfigurationException e) {
+//			System.out.println(e.getMessage());
+//			fail();
+//		}
 	}
 
 	@Test

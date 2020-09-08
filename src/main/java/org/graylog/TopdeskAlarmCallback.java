@@ -72,6 +72,7 @@ public class TopdeskAlarmCallback implements AlarmCallback {
 	private static final String CATEGORY = "category";
 	private static final String SUBCATEGORY = "subcategory";
 	private static final String SECOND_LINE = "second_line";
+	private static final String OPTIONAL_FIELDS = "optional_fields";
 
 	private static final String SUMMARY = "summary";
 	private static final String DESCRIPTION = "description";
@@ -84,6 +85,7 @@ public class TopdeskAlarmCallback implements AlarmCallback {
 	@Override
 	public void call(Stream stream, CheckResult result) throws AlarmCallbackException {
 		String description = configuration.getString(DESCRIPTION);
+		String optionalFields = configuration.getString(OPTIONAL_FIELDS);
 
 		description = description.replace("%stream%", stream.getTitle());
 
@@ -93,7 +95,6 @@ public class TopdeskAlarmCallback implements AlarmCallback {
 		String dateTime = sdf.format(new Date());
 
 		description = description.replace("%triggeredAt%", dateTime);
-
 
 		if (result.getMatchingMessages().size() > 0) {
 			List<Message> messages = getAlarmBacklog(result);
@@ -107,13 +108,14 @@ public class TopdeskAlarmCallback implements AlarmCallback {
 				while (it.hasNext()) {
 					Map.Entry pair = (Map.Entry) it.next();
 					description = description.replace("%" + pair.getKey() + "%", pair.getValue().toString());
+					optionalFields.replace("%" + pair.getKey() + "%", pair.getValue().toString());
 				}
 			}
 		}
 
 		try {
 			OkHttpClient client = getUnsafeOkHttpClient();
-			postIncident(client, description);
+			postIncident(client, description, optionalFields);
 		} catch (ParseException|IOException e) {
 			throw new AlarmCallbackException(e.toString());
 		}
@@ -141,10 +143,10 @@ public class TopdeskAlarmCallback implements AlarmCallback {
 		return backlog;
 	}
 
-	public void postIncident(OkHttpClient client, String description) throws IOException, ParseException {
+	public void postIncident(OkHttpClient client, String description, String optionalFields) throws IOException, ParseException {
 		String token = login(client);
 
-		post(client, token, description);
+		post(client, token, description, optionalFields);
 
 		logout(client, token);
 	}
@@ -165,7 +167,7 @@ public class TopdeskAlarmCallback implements AlarmCallback {
 	}
 
 
-	void post(OkHttpClient client, String token, String description) throws HTTPException, ParseException, IOException {
+	void post(OkHttpClient client, String token, String description, String optionalFields) throws HTTPException, ParseException, IOException {
 		JSONObject jsonRequest= new JSONObject();
 
 		JSONObject callerLookup = new JSONObject();
@@ -174,6 +176,30 @@ public class TopdeskAlarmCallback implements AlarmCallback {
 
 		jsonRequest.put("briefDescription", configuration.getString(SUMMARY));
 		jsonRequest.put("request", description);
+
+		if (!optionalFields.equals("")){
+			String[] optionalFieldList = optionalFields.split(",");
+			int i=0;
+			int j=0;
+			JSONObject optionalFieldsObject = new JSONObject();
+			for (String optionalField: optionalFieldList){
+				if ("".equals(optionalField)){
+					continue;
+				}
+
+				if (i==5) {
+					jsonRequest.put("optionalFields"+(j+1), optionalFieldsObject);
+					optionalFieldsObject = new JSONObject();
+					i = 0;
+					j++;
+				}
+
+				String key = "text"+(i+1);
+				optionalFieldsObject.put(key, optionalField);
+				i++;
+			}
+
+		}
 
 		if (configuration.stringIsSet(PRIORITY)) {
 			String priorityId = getId(client, token, PRIORITIES_URI, configuration.getString(PRIORITY), "name");
@@ -335,6 +361,13 @@ public class TopdeskAlarmCallback implements AlarmCallback {
 			throw new ConfigurationException(LOGIN_MODE + " is mandatory and must be not be null or empty.");
 		}
 
+		if (configuration.stringIsSet(OPTIONAL_FIELDS)) {
+			if (configuration.getString(OPTIONAL_FIELDS).split(",").length > 10){
+				throw new ConfigurationException("You can't supply more than 10 optional field values");
+			}
+
+		}
+
 		OkHttpClient client;
 		String token;
 
@@ -403,6 +436,8 @@ public class TopdeskAlarmCallback implements AlarmCallback {
 					throw new ConfigurationException( configuration.getString(SUBCATEGORY) + " is not a valid " + SUBCATEGORY);
 				}
 			}
+
+
 		} catch (ParseException|IOException e) {
 			throw new ConfigurationException( "Failed to verify configuration: " + e.getMessage());
 		}
@@ -486,6 +521,10 @@ public class TopdeskAlarmCallback implements AlarmCallback {
 
 		configurationRequest.addField(new BooleanField(SECOND_LINE, "Second Line", false,
 				""));
+
+		configurationRequest.addField(new TextField(OPTIONAL_FIELDS, "Optional fields", "",
+				"Comma separated list of optional field values to add to the incident. Use %fieldname% placeholders to replace with fields from the first message.", ConfigurationField.Optional.OPTIONAL));
+
 
 		return configurationRequest;
 	}
