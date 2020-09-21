@@ -174,22 +174,13 @@ public class TopdeskAlarmCallback implements AlarmCallback {
 			int i=0;
 			JSONObject optionalFieldsObject = new JSONObject();
 			for (String optionalField: optionalFieldList) {
-				System.out.println("field " + i);
-				if ("".equals(optionalField)) {
-					continue;
-				}
+				String[] keyValues = optionalField.split(":");
+				optionalFieldsObject.put(keyValues[0], keyValues[1]);
 
-				String key = "text" + (i + 1);
-				optionalFieldsObject.put(key, optionalField);
-				i++;
 			}
 			optionalFieldsList.add(optionalFieldsObject);
-
 		}
 
-		for (JSONObject optionalField: optionalFieldsList){
-			System.out.println(optionalField);
-		}
 		return optionalFieldsList;
 	}
 
@@ -375,9 +366,17 @@ public class TopdeskAlarmCallback implements AlarmCallback {
 		}
 
 		if (configuration.stringIsSet(OPTIONAL_FIELDS)) {
-			if (configuration.getString(OPTIONAL_FIELDS).split(",").length > 5){
-				throw new ConfigurationException("You can't supply more than 5 optional field values");
+			String[] optionalFields = configuration.getString(OPTIONAL_FIELDS).split(",");
+			if (optionalFields.length > 5){
+				throw new ConfigurationException("You can't supply more than 5 optional field values.");
 			}
+			for (String optionalField: optionalFields){
+				String[] keyValues = optionalField.split(":");
+				if (keyValues.length != 2) {
+					throw new ConfigurationException("Optional Fields are of format key:value.");
+				}
+			}
+
 
 		}
 
@@ -536,7 +535,7 @@ public class TopdeskAlarmCallback implements AlarmCallback {
 				""));
 
 		configurationRequest.addField(new TextField(OPTIONAL_FIELDS, "Optional fields", "",
-				"Comma separated list of optional field values to add to the incident. Use %fieldname% placeholders to replace with fields from the first message.", ConfigurationField.Optional.OPTIONAL));
+				"Comma separated list of optional fields (format is key:value) to add to the incident. Use %fieldname% placeholders to replace with fields from the first message.", ConfigurationField.Optional.OPTIONAL));
 
 
 		return configurationRequest;

@@ -69,6 +69,24 @@ public class TopdeskAlarmCallbackTest {
 			.put("description", "Alert raised on stream <b>%stream%</b> at the following time: <b>%triggeredAt%</b>.<br/><br/> Source ip: %src_ip%.")
 			.build();
 
+	private static final ImmutableMap<String, Object> INVALID_CONFIG_OPTIONAL_FIELDS = ImmutableMap.<String, Object> builder()
+			.put("endpoint", "https://localhost")
+			.put("username", "user")
+			.put("password", "pass")
+			.put("login_mode", "operator")
+			.put("caller_email", "foo@bar.com")
+			.put("summary", "summary")
+			.put("priority", "priority")
+			.put("entry_type", "entry type")
+			.put("call_type", "call type")
+			.put("object", "object")
+			.put("impact", "impact")
+			.put("urgency", "urgency")
+			.put("operator_group", "operators")
+			.put("optional_fields", "text1:test1,text2:te:st2,text3:test3")
+			.put("description", "Alert raised on stream <b>%stream%</b> at the following time: <b>%triggeredAt%</b>.<br/><br/> Source ip: %src_ip%.")
+			.build();
+
 
 	private static final Configuration VALID_CONFIGURATION = new Configuration(VALID_CONFIG);
 
@@ -98,8 +116,20 @@ public class TopdeskAlarmCallbackTest {
 	}
 
 	@Test
+	public void testInitializeInvalidOptionalFields() throws AlarmCallbackConfigurationException {
+		final Configuration configuration = new Configuration(INVALID_CONFIG_OPTIONAL_FIELDS);
+		alarmCallback.initialize(configuration);
+		try {
+			alarmCallback.checkConfiguration();
+			fail();
+		} catch (ConfigurationException e) {
+			System.out.println(e.getMessage());
+		}
+	}
+
+	@Test
 	public void testParseOptionalFields(){
-		assertEquals(5, alarmCallback.parseOptionalFields("test1,test2,test3,test4,test5").get(0).size());
+		assertEquals(5, alarmCallback.parseOptionalFields("text1:test1,text2:test2,text3:test3,text4:test4,text5:test5").get(0).size());
 	}
 
 
