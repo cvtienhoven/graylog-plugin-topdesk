@@ -97,6 +97,11 @@ public class TopdeskAlarmCallbackTest {
 		}
 	}
 
+	@Test
+	public void testParseOptionalFields(){
+		assertEquals(5, alarmCallback.parseOptionalFields("test1,test2,test3,test4,test5").get(0).size());
+	}
+
 
 	@Test
 	public void testConfigurationSucceedsWithValidConfiguration()

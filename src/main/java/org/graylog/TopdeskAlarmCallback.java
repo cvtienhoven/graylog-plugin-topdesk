@@ -166,6 +166,33 @@ public class TopdeskAlarmCallback implements AlarmCallback {
 		return response.body().string();
 	}
 
+	@VisibleForTesting
+	List<JSONObject> parseOptionalFields(String optionalFields){
+		List<JSONObject> optionalFieldsList = new ArrayList<JSONObject>();
+		if (!optionalFields.equals("")){
+			String[] optionalFieldList = optionalFields.split(",");
+			int i=0;
+			JSONObject optionalFieldsObject = new JSONObject();
+			for (String optionalField: optionalFieldList) {
+				System.out.println("field " + i);
+				if ("".equals(optionalField)) {
+					continue;
+				}
+
+				String key = "text" + (i + 1);
+				optionalFieldsObject.put(key, optionalField);
+				i++;
+			}
+			optionalFieldsList.add(optionalFieldsObject);
+
+		}
+
+		for (JSONObject optionalField: optionalFieldsList){
+			System.out.println(optionalField);
+		}
+		return optionalFieldsList;
+	}
+
 
 	void post(OkHttpClient client, String token, String description, String optionalFields) throws HTTPException, ParseException, IOException {
 		JSONObject jsonRequest= new JSONObject();
@@ -177,29 +204,15 @@ public class TopdeskAlarmCallback implements AlarmCallback {
 		jsonRequest.put("briefDescription", configuration.getString(SUMMARY));
 		jsonRequest.put("request", description);
 
-		if (!optionalFields.equals("")){
-			String[] optionalFieldList = optionalFields.split(",");
-			int i=0;
-			int j=0;
-			JSONObject optionalFieldsObject = new JSONObject();
-			for (String optionalField: optionalFieldList){
-				if ("".equals(optionalField)){
-					continue;
-				}
+		List<JSONObject> optionalFieldsList = parseOptionalFields(optionalFields);
 
-				if (i==5) {
-					jsonRequest.put("optionalFields"+(j+1), optionalFieldsObject);
-					optionalFieldsObject = new JSONObject();
-					i = 0;
-					j++;
-				}
-
-				String key = "text"+(i+1);
-				optionalFieldsObject.put(key, optionalField);
-				i++;
-			}
-
+		int i=0;
+		for (JSONObject optionalField: optionalFieldsList){
+			System.out.println(optionalField);
+			jsonRequest.put("optionalFields"+(i+1), optionalField);
 		}
+
+
 
 		if (configuration.stringIsSet(PRIORITY)) {
 			String priorityId = getId(client, token, PRIORITIES_URI, configuration.getString(PRIORITY), "name");
@@ -362,8 +375,8 @@ public class TopdeskAlarmCallback implements AlarmCallback {
 		}
 
 		if (configuration.stringIsSet(OPTIONAL_FIELDS)) {
-			if (configuration.getString(OPTIONAL_FIELDS).split(",").length > 10){
-				throw new ConfigurationException("You can't supply more than 10 optional field values");
+			if (configuration.getString(OPTIONAL_FIELDS).split(",").length > 5){
+				throw new ConfigurationException("You can't supply more than 5 optional field values");
 			}
 
 		}
