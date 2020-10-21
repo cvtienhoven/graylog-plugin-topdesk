@@ -46,7 +46,7 @@ public class TopdeskAlarmCallbackTest {
 			.put("impact", "impact")
 			.put("urgency", "urgency")
 			.put("operator_group", "operators")
-			.put("optional_fields", "test1,test2")
+			.put("optional_fields", "text5:%sha256%")
 			.put("description", "Alert raised on stream <b>%stream%</b> at the following time: <b>%triggeredAt%</b>.<br/><br/> Source ip: %src_ip%.")
 			.build();
 
@@ -150,7 +150,7 @@ public class TopdeskAlarmCallbackTest {
 		assertEquals("Topdesk Alarm Callback", alarmCallback.getName());
 	}
 	
-	/*
+/*
 	@Test
 	public void testCall() throws Exception {
 		DateTime dateTime = new DateTime(2015, 11, 18, 12, 7, DateTimeZone.UTC);
@@ -161,20 +161,24 @@ public class TopdeskAlarmCallbackTest {
 
 		when(checkResult.getTriggeredCondition()).thenReturn(alertcondition);
 
+
+
 		alarmCallback.initialize(VALID_CONFIGURATION);
 		alarmCallback.checkConfiguration();
+
 		alarmCallback.call(stream, checkResult);
 
 		//verify(client).submitMessage(Mockito.any(TextMessage.class));
 	}
-*/
 
+*/
 
 	private AlertCondition mockAlertCondition() {
 		final String alertConditionId = "alertConditionId";
 		final AlertCondition alertCondition = mock(AlertCondition.class);
 		when(alertCondition.getId()).thenReturn(alertConditionId);
 		when(alertCondition.getDescription()).thenReturn("alert description");
+		when(alertCondition.getBacklog()).thenReturn(1);
 		return alertCondition;
 	}
 
@@ -188,13 +192,14 @@ public class TopdeskAlarmCallbackTest {
 	private CheckResult mockCheckResult(DateTime dateTime){
 		final CheckResult result = mock(CheckResult.class);
 		List<MessageSummary> messages = new ArrayList<MessageSummary>();
-        /*
+
 		Message message1 = mock(Message.class);
 		when(message1.getId()).thenReturn("test_id1");
 		when(message1.getSource()).thenReturn("test_source1");
 		when(message1.getMessage()).thenReturn("test_message1");
 		Map<String, Object> fields = new HashMap<String, Object>();
 		fields.put("src_ip", "123.123.321.321");
+		fields.put("sha256", "soidjfvoisdjfg0983sovsdsg");
 
 
 		when(message1.getFields()).thenReturn(fields);
@@ -213,7 +218,7 @@ public class TopdeskAlarmCallbackTest {
 
 		MessageSummary messageSummary2 = new MessageSummary("index2", message2);
 		messages.add(messageSummary2);
-        */
+
 		when(result.getMatchingMessages()).thenReturn(messages);
 		when(result.getTriggeredAt()).thenReturn(dateTime);
 		when(result.getResultDescription()).thenReturn("Result description");

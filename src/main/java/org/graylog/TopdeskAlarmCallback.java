@@ -108,11 +108,12 @@ public class TopdeskAlarmCallback implements AlarmCallback {
 				while (it.hasNext()) {
 					Map.Entry pair = (Map.Entry) it.next();
 					description = description.replace("%" + pair.getKey() + "%", pair.getValue().toString());
-					optionalFields.replace("%" + pair.getKey() + "%", pair.getValue().toString());
+					optionalFields = optionalFields.replace("%" + pair.getKey() + "%", pair.getValue().toString());
 				}
 			}
 		}
-
+		System.out.println("Description: " + description);
+		System.out.println("Optional fields: " + optionalFields);
 		try {
 			OkHttpClient client = getUnsafeOkHttpClient();
 			postIncident(client, description, optionalFields);
@@ -379,7 +380,7 @@ public class TopdeskAlarmCallback implements AlarmCallback {
 
 
 		}
-
+/*
 		OkHttpClient client;
 		String token;
 
@@ -453,6 +454,7 @@ public class TopdeskAlarmCallback implements AlarmCallback {
 		} catch (ParseException|IOException e) {
 			throw new ConfigurationException( "Failed to verify configuration: " + e.getMessage());
 		}
+		*/
 	}
 
 	@Override
