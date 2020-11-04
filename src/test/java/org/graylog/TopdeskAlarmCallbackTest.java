@@ -46,7 +46,7 @@ public class TopdeskAlarmCallbackTest {
 			.put("impact", "impact")
 			.put("urgency", "urgency")
 			.put("operator_group", "operators")
-			.put("optional_fields", "text5:%sha256%")
+			.put("optional_fields", "optionalFields1:text5:%sha256%")
 			.put("description", "Alert raised on stream <b>%stream%</b> at the following time: <b>%triggeredAt%</b>.<br/><br/> Source ip: %src_ip%.")
 			.build();
 
@@ -129,7 +129,7 @@ public class TopdeskAlarmCallbackTest {
 
 	@Test
 	public void testParseOptionalFields(){
-		assertEquals(5, alarmCallback.parseOptionalFields("text1:test1,text2:test2,text3:test3,text4:test4,text5:test5").get(0).size());
+		assertEquals(3, alarmCallback.parseOptionalFields("optionalFields1:text1:test1,optionalFields2:text2:test2,optionalFields1:text3:test3,optionalFields1:text4:test4,text5:test5").get("optionalFields1").size());
 	}
 
 
@@ -150,28 +150,28 @@ public class TopdeskAlarmCallbackTest {
 		assertEquals("Topdesk Alarm Callback", alarmCallback.getName());
 	}
 	
-/*
-	@Test
-	public void testCall() throws Exception {
-		DateTime dateTime = new DateTime(2015, 11, 18, 12, 7, DateTimeZone.UTC);
 
-		final Stream stream = mockStream();
-		final AlertCondition.CheckResult checkResult = mockCheckResult(dateTime);//mock(AlertCondition.CheckResult.class);
-		final AlertCondition alertcondition = mockAlertCondition();
+//	@Test
+//	public void testCall() throws Exception {
+//		DateTime dateTime = new DateTime(2015, 11, 18, 12, 7, DateTimeZone.UTC);
+//
+//		final Stream stream = mockStream();
+//		final AlertCondition.CheckResult checkResult = mockCheckResult(dateTime);//mock(AlertCondition.CheckResult.class);
+//		final AlertCondition alertcondition = mockAlertCondition();
+//
+//		when(checkResult.getTriggeredCondition()).thenReturn(alertcondition);
+//
+//
+//
+//		alarmCallback.initialize(VALID_CONFIGURATION);
+//		alarmCallback.checkConfiguration();
+//
+//		alarmCallback.call(stream, checkResult);
+//
+//		//verify(client).submitMessage(Mockito.any(TextMessage.class));
+//	}
 
-		when(checkResult.getTriggeredCondition()).thenReturn(alertcondition);
 
-
-
-		alarmCallback.initialize(VALID_CONFIGURATION);
-		alarmCallback.checkConfiguration();
-
-		alarmCallback.call(stream, checkResult);
-
-		//verify(client).submitMessage(Mockito.any(TextMessage.class));
-	}
-
-*/
 
 	private AlertCondition mockAlertCondition() {
 		final String alertConditionId = "alertConditionId";

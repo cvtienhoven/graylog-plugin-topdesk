@@ -168,21 +168,36 @@ public class TopdeskAlarmCallback implements AlarmCallback {
 	}
 
 	@VisibleForTesting
-	List<JSONObject> parseOptionalFields(String optionalFields){
-		List<JSONObject> optionalFieldsList = new ArrayList<JSONObject>();
+	Map<String, JSONObject> parseOptionalFields(String optionalFields){
+		Map<String, JSONObject> optionalFieldMap = new HashMap<String, JSONObject>();
+
+		JSONObject optionalFields1 = new JSONObject();
+		JSONObject optionalFields2 = new JSONObject();
+
 		if (!optionalFields.equals("")){
 			String[] optionalFieldList = optionalFields.split(",");
 			int i=0;
-			JSONObject optionalFieldsObject = new JSONObject();
+
 			for (String optionalField: optionalFieldList) {
 				String[] keyValues = optionalField.split(":");
-				optionalFieldsObject.put(keyValues[0], keyValues[1]);
+				if (keyValues.length < 3) {
+					continue;
+				}
+
+				if (keyValues[0].endsWith("1")) {
+					optionalFields1.put(keyValues[1], keyValues[2]);
+				} else {
+					optionalFields2.put(keyValues[1], keyValues[2]);
+				}
 
 			}
-			optionalFieldsList.add(optionalFieldsObject);
+
 		}
 
-		return optionalFieldsList;
+		optionalFieldMap.put("optionalFields1", optionalFields1);
+		optionalFieldMap.put("optionalFields2", optionalFields2);
+
+		return optionalFieldMap;
 	}
 
 
@@ -196,15 +211,15 @@ public class TopdeskAlarmCallback implements AlarmCallback {
 		jsonRequest.put("briefDescription", configuration.getString(SUMMARY));
 		jsonRequest.put("request", description);
 
-		List<JSONObject> optionalFieldsList = parseOptionalFields(optionalFields);
+		Map<String, JSONObject> optionalFieldsMap = parseOptionalFields(optionalFields);
 
-		int i=0;
-		for (JSONObject optionalField: optionalFieldsList){
-			System.out.println(optionalField);
-			jsonRequest.put("optionalFields"+(i+1), optionalField);
+		if (!optionalFieldsMap.get("optionalFields1").isEmpty()) {
+			jsonRequest.put("optionalFields1", optionalFieldsMap.get("optionalFields1"));
 		}
 
-
+		if (!optionalFieldsMap.get("optionalFields2").isEmpty()) {
+			jsonRequest.put("optionalFields2", optionalFieldsMap.get("optionalFields2"));
+		}
 
 		if (configuration.stringIsSet(PRIORITY)) {
 			String priorityId = getId(client, token, PRIORITIES_URI, configuration.getString(PRIORITY), "name");
@@ -373,8 +388,8 @@ public class TopdeskAlarmCallback implements AlarmCallback {
 			}
 			for (String optionalField: optionalFields){
 				String[] keyValues = optionalField.split(":");
-				if (keyValues.length != 2) {
-					throw new ConfigurationException("Optional Fields are of format key:value.");
+				if (keyValues.length != 3) {
+					throw new ConfigurationException("Optional Fields are of format optionalFields1:key:value or optionalFields2:key:value.");
 				}
 			}
 
